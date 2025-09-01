@@ -40,6 +40,7 @@ export function OrderModal({ table: initialTable, isOpen, onClose }: OrderModalP
   const context = useContext(AppContext);
   const [isBillLoading, startBillTransition] = useTransition();
   const [billDetails, setBillDetails] = useState<string | null>(null);
+  const [printRequested, setPrintRequested] = useState(false);
   const [isBillDialogOpen, setBillDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -71,30 +72,29 @@ export function OrderModal({ table: initialTable, isOpen, onClose }: OrderModalP
   
   const handleGenerateBill = () => {
     if (!order) return;
-    
-    startBillTransition(async () => {
-      const orderItemsForAI = order.items.map(item => ({
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-      }));
+    // Build bill using template
+    const salesTaxRate = 8.5;
+    const subtotal = order.items.reduce((total, item) => total + item.price * item.quantity, 0);
+    // Example discount logic (customize as needed)
+    const discount = 0;
+    const salesTax = +(subtotal * (salesTaxRate / 100)).toFixed(2);
+    const totalDue = +(subtotal - discount + salesTax).toFixed(2);
 
-      const result = await generateBillAction({
-        orderItems: orderItemsForAI,
-        salesTaxRate: 8.5,
-      });
+    // Format item lines
+    const itemLines = order.items.map(item => {
+      const namePad = item.name.padEnd(15, ' ');
+      const qtyPad = String(item.quantity).padStart(2, ' ');
+      const pricePad = `₹${item.price.toFixed(2)}`;
+      const totalPad = `₹${(item.price * item.quantity).toFixed(2)}`;
+      return `- ${namePad}: ${qtyPad} x ${pricePad} = ${totalPad}`;
+    }).join('\n');
 
-      if ('error' in result) {
-        toast({
-          variant: 'destructive',
-          title: 'Error Generating Bill',
-          description: result.error,
-        });
-      } else {
-        setBillDetails(result.billDetails);
-        setBillDialogOpen(true);
-      }
-    });
+    // Discounts section (customize as needed)
+    const discountsSection = `- 10% off on all coffee drinks (Not applicable to coffee beans)\n- No other applicable discounts based on customer history for current items.`;
+
+    const billText = `--- Detailed Bill ---\n\nItemized Costs:\n${itemLines}\n\nSubtotal: ₹${subtotal.toFixed(2)}\n\nDiscounts:\n${discountsSection}\nTotal Discounts: ₹${discount.toFixed(2)}\n\nSales Tax (${salesTaxRate}%): ₹${salesTax.toFixed(2)}\n\nTotal Amount Due: ₹${totalDue.toFixed(2)}\n\nThank you for your purchase!`;
+    setBillDetails(billText);
+    setBillDialogOpen(true);
   };
 
   const handleClearTable = () => {
@@ -165,7 +165,7 @@ export function OrderModal({ table: initialTable, isOpen, onClose }: OrderModalP
                                 </Button>
                               </div>
                             </TableCell>
-                            <TableCell className="text-right font-mono">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                            <TableCell className="text-right font-mono">₹{(item.price * item.quantity).toFixed(2)}</TableCell>
                             <TableCell className="text-right">
                                <div className="flex justify-end gap-1">
                                 {!item.served && (
@@ -192,7 +192,7 @@ export function OrderModal({ table: initialTable, isOpen, onClose }: OrderModalP
                 </ScrollArea>
                 <div className="flex justify-between items-center font-bold text-lg p-2 rounded-lg bg-muted">
                     <span>Total</span>
-                    <span className="font-mono">${orderTotal.toFixed(2)}</span>
+                    <span className="font-mono">₹{orderTotal.toFixed(2)}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-4 overflow-hidden">
@@ -209,7 +209,7 @@ export function OrderModal({ table: initialTable, isOpen, onClose }: OrderModalP
                       >
                         <div className="w-full">
                           <p className="font-semibold">{item.name}</p>
-                          <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
                         </div>
                         <Badge variant={item.stock > 0 ? 'secondary' : 'destructive'} className="mt-2 text-xs">
                           {item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
@@ -243,6 +243,8 @@ export function OrderModal({ table: initialTable, isOpen, onClose }: OrderModalP
         onClose={() => setBillDialogOpen(false)}
         billDetails={billDetails}
         tableId={table?.id ?? null}
+        printRequested={printRequested}
+        onPrint={() => setPrintRequested(true)}
       />
     </>
   );

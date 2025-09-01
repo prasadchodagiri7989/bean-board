@@ -23,6 +23,26 @@ export function BillDialog({
   billDetails,
   tableId,
 }: BillDialogProps) {
+  // Print only the bill content
+  const handlePrint = () => {
+    const printContents = document.getElementById('bill-print-content');
+    if (!printContents) return window.print();
+    const printWindow = window.open('', '', 'height=600,width=400');
+    if (printWindow) {
+      printWindow.document.write('<html><head><title>Bill Receipt</title>');
+      printWindow.document.write('<style>body{font-family:monospace;white-space:pre;} pre{font-size:16px;}</style>');
+      printWindow.document.write('</head><body >');
+      printWindow.document.write(printContents.outerHTML);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -33,9 +53,9 @@ export function BillDialog({
           </DialogDescription>
         </DialogHeader>
         {billDetails ? (
-          <div className="prose prose-sm dark:prose-invert max-h-[50vh] overflow-y-auto rounded-md border bg-muted/50 p-4 font-mono text-foreground whitespace-pre-wrap">
+          <pre id="bill-print-content" className="max-h-[50vh] overflow-y-auto rounded-md border bg-muted/50 p-4 font-mono text-foreground whitespace-pre-wrap">
             {billDetails}
-          </div>
+          </pre>
         ) : (
           <div className="flex items-center justify-center h-40">
             <p>No bill to display.</p>
@@ -45,7 +65,7 @@ export function BillDialog({
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
-            <Button onClick={() => window.print()}>
+            <Button onClick={handlePrint}>
               <Printer className="mr-2" />
               Print Bill
             </Button>

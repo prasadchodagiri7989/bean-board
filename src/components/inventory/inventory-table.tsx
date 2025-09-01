@@ -44,12 +44,12 @@ export function InventoryTable({ items, onEdit }: InventoryTableProps) {
                     {isLowStock ? (
                         <Badge variant="destructive">Low Stock</Badge>
                     ) : (
-                        <Badge variant="outline" className="text-accent-foreground border-accent">In Stock</Badge>
+                        <Badge variant="outline" className="text-black border-accent">In Stock</Badge>
                     )}
                 </TableCell>
                 <TableCell className="text-right font-mono">{item.stock}</TableCell>
-                <TableCell className="text-right font-mono">${item.cost.toFixed(2)}</TableCell>
-                <TableCell className="text-right font-mono">${item.price.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-mono">Rs {item.cost.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-mono">Rs {item.price.toFixed(2)}</TableCell>
                 <TableCell className="text-center">
                   <Badge variant={item.isMenuItem ? 'default' : 'secondary'}>
                     {item.isMenuItem ? 'Yes' : 'No'}
