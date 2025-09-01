@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useContext, useMemo, useTransition } from 'react';
@@ -35,7 +36,7 @@ interface OrderModalProps {
   onClose: () => void;
 }
 
-export function OrderModal({ table, isOpen, onClose }: OrderModalProps) {
+export function OrderModal({ table: initialTable, isOpen, onClose }: OrderModalProps) {
   const context = useContext(AppContext);
   const [isBillLoading, startBillTransition] = useTransition();
   const [billDetails, setBillDetails] = useState<string | null>(null);
@@ -47,6 +48,11 @@ export function OrderModal({ table, isOpen, onClose }: OrderModalProps) {
   }
 
   const { state, createOrder, addItemToOrder, removeItemFromOrder, updateItemQuantity, markItemAsServed, clearTable } = context;
+
+  const table = useMemo(() => {
+    if (!initialTable) return null;
+    return state.tables.find(t => t.id === initialTable.id) ?? null;
+  }, [initialTable, state.tables]);
 
   const order = useMemo(() => {
     if (table && table.orderId) {
