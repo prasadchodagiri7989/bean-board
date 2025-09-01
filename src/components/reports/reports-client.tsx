@@ -82,7 +82,7 @@ export default function ReportsClient() {
     const topItemsData = Array.from(itemCounts.values())
         .sort((a, b) => b.quantity - a.quantity)
         .slice(0, 5)
-        .map(item => ({...item, fill: `hsl(var(--chart-${Math.floor(Math.random() * 5) + 1}))`}));
+        .map((item, index) => ({...item, fill: `hsl(var(--chart-${index + 1}))`}));
 
 
     return { totalRevenue, totalProfit, totalOrders, dailySalesData, topItemsData };
